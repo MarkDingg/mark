@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.bkmgr.mapper.BookCommentMapper">
+
+    <resultMap type="BookComment" id="BookCommentResult">
+        <result property="id" column="id"/>
+        <result property="bookId" column="book_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="comment" column="comment"/>
+        <result property="star" column="star"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="recordId" column="record_id"/>
+    </resultMap>
+
+    <resultMap type="BookCommentDto" id="BookCommentDtoResult">
+        <result property="id" column="id"/>
+        <result property="bookId" column="book_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="userName" column="nick_name"/>
+        <result property="userAvatar" column="avatar"/>
+        <result property="comment" column="comment"/>
+        <result property="star" column="star"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="selectBookCommentVo">
+        select id,
+               book_id,
+               user_id,
+               comment,
+               star,
+               update_by,
+               create_by,
+               create_time,
+               update_time
+        from bkmgr_book_comment
+    </sql>
+
+    <select id="selectBookCommentList" parameterType="BookComment" resultMap="BookCommentResult">
+        <include refid="selectBookCommentVo"/>
+        <where>
+            <if test="bookId != null ">and book_id = #{bookId}</if>
+            <if test="userId != null ">and user_id = #{userId}</if>
+            <if test="comment != null  and comment != ''">and comment = #{comment}</if>
+            <if test="star != null  and star != ''">and star = #{star}</if>
+            <if test="updateBy != null  and updateBy != ''">and update_by = #{updateBy}</if>
+            <if test="createBy != null  and createBy != ''">and create_by = #{createBy}</if>
+            <if test="createTime != null ">and create_time = #{createTime}</if>
+            <if test="updateTime != null ">and update_time = #{updateTime}</if>
+        </where>
+    </select>
+
+    <select id="selectBookCommentById" parameterType="Long" resultMap="BookCommentResult">
+        <include refid="selectBookCommentVo"/>
+        where id = #{id}
+    </select>
+    <select id="selectBookCommentByBookId"
+            resultMap="BookCommentDtoResult">
+        select bkmgr_book_comment.*, su.nick_name, su.avatar
+        from bkmgr_book_comment
+                 inner join sys_user su on bkmgr_book_comment.user_id = su.user_id
+        where bkmgr_book_comment.book_id = #{bookId}
+    </select>
+    <select id="selectBookCommentByUserId"
+            resultMap="BookCommentResult">
+        select *
+        from bkmgr_book_comment
+        where user_id = #{userId}
+    </select>
+    <select id="selectBookComment" resultMap="BookCommentResult">
+        select *
+        from bkmgr_book_comment
+        where user_id = #{userId}
+          and record_id = #{recordId}
+    </select>
+
+    <insert id="insertBookComment" parameterType="BookComment">
+        insert into bkmgr_book_comment
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="bookId != null">book_id,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="comment != null">comment,</if>
+            <if test="star != null">star,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="recordId != null">record_id,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="bookId != null">#{bookId},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="comment != null">#{comment},</if>
+            <if test="star != null">#{star},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="recordId != null">#{recordId},</if>
+        </trim>
+    </insert>
+
+    <update id="updateBookComment" parameterType="BookComment">
+        update bkmgr_book_comment
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="bookId != null">book_id = #{bookId},</if>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="comment != null">comment = #{comment},</if>
+            <if test="star != null">star = #{star},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteBookCommentById" parameterType="Long">
+        delete
+        from bkmgr_book_comment
+        where id = #{id}
+    </delete>
+
+    <delete id="deleteBookCommentByIds" parameterType="String">
+        delete from bkmgr_book_comment where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

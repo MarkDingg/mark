@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.bkmgr.mapper.BorrowRecordMapper">
+
+    <resultMap type="BorrowRecord" id="BorrowRecordResult">
+        <result property="id" column="id"/>
+        <result property="bookId" column="book_id"/>
+        <result property="borrowTime" column="borrow_time"/>
+        <result property="returnTime" column="return_time"/>
+        <result property="borrowUser" column="borrow_user"/>
+        <result property="returnUser" column="return_user"/>
+        <result property="createBy" column="create_by"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap type="BorrowRecordDto" id="BorrowRecordDtoMap">
+        <result property="id" column="id"/>
+        <result property="bookId" column="book_id"/>
+        <result property="borrowTime" column="borrow_time"/>
+        <result property="returnTime" column="return_time"/>
+        <result property="borrowUser" column="borrow_user"/>
+        <result property="returnUser" column="return_user"/>
+        <result property="createBy" column="create_by"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="bookName" column="book_name"/>
+        <result property="returnUserName" column="return_user_name"/>
+        <result property="borrowUserName" column="borrow_user_name"/>
+    </resultMap>
+
+    <sql id="selectBorrowRecordVo">
+        select id,
+               book_id,
+               borrow_time,
+               return_time,
+               borrow_user,
+               return_user,
+               create_by,
+               update_by,
+               create_time,
+               update_time
+        from bkmgr_borrow_record
+    </sql>
+
+    <select id="selectBorrowRecordList" parameterType="BorrowRecord" resultMap="BorrowRecordResult">
+        <include refid="selectBorrowRecordVo"/>
+        <where>
+            <if test="bookId != null ">and book_id = #{bookId}</if>
+            <if test="borrowTime != null ">and borrow_time = #{borrowTime}</if>
+            <if test="returnTime != null ">and return_time = #{returnTime}</if>
+            <if test="borrowUser != null  and borrowUser != ''">and borrow_user = #{borrowUser}</if>
+            <if test="returnUser != null  and returnUser != ''">and return_user = #{returnUser}</if>
+            <if test="updateBy != null  and updateBy != ''">and update_by = #{updateBy}</if>
+            <if test="updateTime != null ">and update_time = #{updateTime}</if>
+        </where>
+    </select>
+
+    <select id="selectBorrowRecordById" parameterType="Long" resultMap="BorrowRecordResult">
+        <include refid="selectBorrowRecordVo"/>
+        where id = #{id}
+    </select>
+    <select id="selectBorrowRecords" resultMap="BorrowRecordDtoMap">
+        select re.*, bb.book_name, su.nick_name as borrow_user_name, su2.nick_name as
+        return_user_name
+        from bkmgr_borrow_record re
+        inner join bkmgr_book bb on re.book_id = bb.book_id
+        inner join sys_user su on re.borrow_user = su.user_id
+        left join sys_user su2 on re.return_user = su2.user_id
+        <where>
+            <if test="isReturn == 0 ">and re.return_time is null
+            </if>
+            <if test="isReturn != 0 ">and re.return_time is not null
+            </if>
+
+            <if test="bookName != null and bookName !='' ">and bb.book_name like concat('%',
+                #{bookName}, '%')
+            </if>
+            <if test="startBorrowTime != null ">and re.borrow_time <![CDATA[ >= ]]>
+                #{startBorrowTime}
+            </if>
+            <if test="endBorrowTime != null ">and re.borrow_time <![CDATA[<=]]>
+                #{endBorrowTime}
+            </if>
+            <if test="startReturnTime != null ">and re.return_time  <![CDATA[ >= ]]>
+                #{startReturnTime}
+            </if>
+            <if test="endReturnTime != null ">and re.return_time  <![CDATA[ <= ]]>
+                #{endReturnTime}
+            </if>
+            <if test="borrowUser != null  and borrowUser != ''">and su.nick_name like
+                concat('%', #{borrowUser},'%')
+            </if>
+            <if test="returnUser != null  and returnUser != ''">and su2.nick_name like
+                concat('%', #{returnUser},'%')
+            </if>
+            <if test="updateBy != null  and updateBy != ''">and re.update_by = #{updateBy}</if>
+            <if test="updateTime != null ">and re.update_time = #{updateTime}</if>
+        </where>
+        order by re.create_time desc
+    </select>
+    <select id="selectNotReturnedRecordByBookIds"
+            resultMap="BorrowRecordResult">
+        select *
+        from bkmgr_borrow_record where return_time is null
+        and book_id in
+        <foreach collection="array" item="bookId" open="(" close=")"
+                 separator=",">#{bookId}
+        </foreach>
+    </select>
+    <select id="selectCount" resultType="java.lang.Long">
+        select count(*)
+        from bkmgr_borrow_record;
+    </select>
+
+    <insert id="insertBorrowRecord" parameterType="BorrowRecord" useGeneratedKeys="true"
+            keyProperty="id">
+        insert into bkmgr_borrow_record
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="bookId != null">book_id,</if>
+            <if test="borrowTime != null">borrow_time,</if>
+            <if test="returnTime != null">return_time,</if>
+            <if test="borrowUser != null">borrow_user,</if>
+            <if test="returnUser != null">return_user,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="bookId != null">#{bookId},</if>
+            <if test="borrowTime != null">#{borrowTime},</if>
+            <if test="returnTime != null">#{returnTime},</if>
+            <if test="borrowUser != null">#{borrowUser},</if>
+            <if test="returnUser != null">#{returnUser},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+    <insert id="batchInsertBorrowRecord">
+        insert into bkmgr_borrow_record
+        (
+        book_id,
+        borrow_time,
+        return_time,
+        borrow_user,
+        return_user,
+        create_by,
+        update_by,
+        create_time,
+        update_time
+        )
+        values
+
+        <foreach item="record" collection="list" separator=",">
+            (
+            #{record.bookId},#{record.borrowTime},#{record.returnTime},#{record.borrowUser},#{record.returnUser},
+            #{record.createBy},#{record.updateBy},#{record.createTime},#{record.updateTime})
+        </foreach>
+
+    </insert>
+
+    <update id="updateBorrowRecord" parameterType="BorrowRecord">
+        update bkmgr_borrow_record
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="bookId != null">book_id = #{bookId},</if>
+            <if test="borrowTime != null">borrow_time = #{borrowTime},</if>
+            <if test="returnTime != null">return_time = #{returnTime},</if>
+            <if test="borrowUser != null">borrow_user = #{borrowUser},</if>
+            <if test="returnUser != null">return_user = #{returnUser},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteBorrowRecordById" parameterType="Long">
+        delete
+        from bkmgr_borrow_record
+        where id = #{id}
+    </delete>
+
+    <delete id="deleteBorrowRecordByIds" parameterType="String">
+        delete from bkmgr_borrow_record where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

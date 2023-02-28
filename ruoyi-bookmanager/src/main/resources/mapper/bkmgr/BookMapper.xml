@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.bkmgr.mapper.BookMapper">
+
+    <resultMap type="Book" id="BookResult">
+        <result property="bookId" column="book_id"/>
+        <result property="bookName" column="book_name"/>
+        <result property="author" column="author"/>
+        <result property="number" column="number"/>
+        <result property="publishingHouse" column="publishing_house"/>
+        <result property="language" column="language"/>
+        <result property="description" column="description"/>
+        <result property="price" column="price"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="createBy" column="create_by"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="inventory" column="inventory"/>
+        <result property="bookCover" column="book_cover"/>
+    </resultMap>
+
+    <resultMap id="bookCategoryMap" type="com.ruoyi.bkmgr.domain.dto.BookCategoryDto">
+        <result property="type" column="type"/>
+        <result property="total" column="total"/>
+    </resultMap>
+
+    <sql id="selectBookVo">
+        select book_id,
+               book_name,
+               author,
+               `number`,
+               publishing_house,
+               `language`,
+               `description`,
+               price,
+               create_time,
+               update_time,
+               create_by,
+               update_by,
+               `inventory`,
+               book_cover
+        from bkmgr_book
+    </sql>
+
+    <select id="selectBookList" parameterType="Book" resultMap="BookResult">
+        <include refid="selectBookVo"/>
+        <where>
+            <if test="bookName != null  and bookName != ''">and book_name like concat('%',
+                #{bookName}, '%')
+            </if>
+            <if test="author != null  and author != ''">and author like concat('%', #{author},
+                '%')
+            </if>
+            <if test="number != null  and number != ''">and number = #{number}</if>
+            <if test="publishingHouse != null  and publishingHouse != ''">and publishing_house =
+                #{publishingHouse}
+            </if>
+            <if test="language != null  and language != ''">and language = #{language}</if>
+            <if test="description != null  and description != ''">and description = #{description}
+            </if>
+            <if test="price != null ">and price = #{price}</if>
+            <if test="updateTime != null ">and update_time = #{updateTime}</if>
+            <if test="updateBy != null  and updateBy != ''">and update_by = #{updateBy}</if>
+        </where>
+    </select>
+
+    <select id="selectBookByBookId" parameterType="Long" resultMap="BookResult">
+        <include refid="selectBookVo"/>
+        where book_id = #{bookId}
+    </select>
+    <select id="selectBookByNumber" resultMap="BookResult">
+        <include refid="selectBookVo"/>
+        where `number` = #{number}
+    </select>
+    <select id="selectBookTypeCategory" resultType="java.lang.String">
+        select bkmgr_type.type, sum(IF(bbt.book_id is null, 0, 1)) as total
+        from bkmgr_type
+                 left join bkmgr_book_type bbt on bkmgr_type.type_id = bbt.book_type_id
+        group by type;
+
+    </select>
+    <select id="selectBookCount" resultType="java.lang.Long">
+        select count(*)
+        from bkmgr_book;
+    </select>
+    <select id="selectBookCategory" resultMap="bookCategoryMap">
+        SELECT bkmgr_type.type,
+               sum(IF(bb.book_id IS NULL, 0, 1)) AS total
+        FROM bkmgr_type
+                 LEFT JOIN bkmgr_book_type bbt ON bkmgr_type.type_id = bbt.book_type_id
+                 LEFT JOIN bkmgr_book bb ON bbt.book_id = bb.book_id
+        GROUP BY bkmgr_type.type;
+    </select>
+    <select id="selectBookListByBookIds" resultMap="BookResult">
+        <include refid="selectBookVo"/>
+        where book_id in
+        <foreach item="bookId" collection="array" open="(" separator="," close=")">
+            #{bookId}
+        </foreach>
+    </select>
+    <select id="selectBorrowableBooks" resultMap="BookResult">
+        select bb.*
+        from bkmgr_borrow_record
+        right join bkmgr_book bb
+        on bkmgr_borrow_record.book_id = bb.book_id and bkmgr_borrow_record.return_time is null
+        where bb.book_id in
+        <foreach item="bookId" collection="collection" open="(" separator="," close=")">
+            #{bookId}
+        </foreach>
+
+    </select>
+    <select id="selectBookListByBookNumbers" resultMap="BookResult">
+        <include refid="selectBookVo"/>
+        where `number` in
+        <foreach item="number" collection="array" open="(" separator="," close=")">
+            #{number}
+        </foreach>
+    </select>
+
+    <insert id="insertBook" parameterType="Book" useGeneratedKeys="true" keyProperty="bookId">
+        insert into bkmgr_book
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="bookName != null">book_name,</if>
+            <if test="author != null">author,</if>
+            <if test="number != null">number,</if>
+            <if test="publishingHouse != null">publishing_house,</if>
+            <if test="language != null">language,</if>
+            <if test="description != null">description,</if>
+            <if test="price != null">price,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="inventory != null">inventory,</if>
+            <if test="bookCover != null">book_cover,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="bookName != null">#{bookName},</if>
+            <if test="author != null">#{author},</if>
+            <if test="number != null">#{number},</if>
+            <if test="publishingHouse != null">#{publishingHouse},</if>
+            <if test="language != null">#{language},</if>
+            <if test="description != null">#{description},</if>
+            <if test="price != null">#{price},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="inventory != null">#{inventory},</if>
+            <if test="bookCover != null">#{bookCover},</if>
+        </trim>
+    </insert>
+
+    <update id="updateBook" parameterType="Book">
+        update bkmgr_book
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="bookName != null">book_name = #{bookName},</if>
+            <if test="author != null">author = #{author},</if>
+            <if test="number != null">number = #{number},</if>
+            <if test="publishingHouse != null">publishing_house = #{publishingHouse},</if>
+            <if test="language != null">language = #{language},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="inventory != null">inventory = #{inventory},</if>
+            <if test="bookCover != null">book_cover = #{bookCover},</if>
+        </trim>
+        where book_id = #{bookId}
+    </update>
+    <update id="updateBookCover">
+        update bkmgr_book
+        set book_cover =#{bookCover}
+        where book_id = #{bookId}
+    </update>
+
+    <delete id="deleteBookByBookId" parameterType="Long">
+        delete
+        from bkmgr_book
+        where book_id = #{bookId}
+    </delete>
+
+    <delete id="deleteBookByBookIds" parameterType="String">
+        delete from bkmgr_book where book_id in
+        <foreach item="bookId" collection="array" open="(" separator="," close=")">
+            #{bookId}
+        </foreach>
+    </delete>
+</mapper>

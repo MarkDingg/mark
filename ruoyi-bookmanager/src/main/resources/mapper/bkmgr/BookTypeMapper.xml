@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.bkmgr.mapper.BookTypeMapper">
+
+    <resultMap type="BookType" id="BookTypeResult">
+        <result property="typeId" column="type_id"/>
+        <result property="type" column="type"/>
+        <result property="desc" column="desc"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="createBy" column="create_by"/>
+        <result property="updateBy" column="update_by"/>
+    </resultMap>
+
+    <resultMap type="BookTypeDto" id="BookTypeDtoResult">
+        <result property="typeId" column="type_id"/>
+        <result property="type" column="type"/>
+        <result property="desc" column="desc"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="createBy" column="create_by"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="bookId" column="book_id"/>
+    </resultMap>
+
+    <sql id="selectBookTypeVo">
+        select type_id, type, `desc`, create_time, update_time, create_by, update_by
+        from bkmgr_type
+    </sql>
+
+    <select id="selectBookTypeList" parameterType="BookType" resultMap="BookTypeResult">
+        <include refid="selectBookTypeVo"/>
+        <where>
+            <if test="type != null  and type != ''">and type like concat('%', #{type}, '%')</if>
+            <if test="desc != null  and desc != ''">and `desc` = #{desc}</if>
+        </where>
+    </select>
+
+    <select id="selectBookTypeByTypeId" parameterType="Long" resultMap="BookTypeResult">
+        <include refid="selectBookTypeVo"/>
+        where type_id = #{typeId}
+    </select>
+    <select id="selectBookTypesByBookId" resultMap="BookTypeResult">
+        select bkmgr_type.type_id,
+               bkmgr_type.type,
+               bkmgr_type.`desc`,
+               bkmgr_type.create_time,
+               bkmgr_type.update_time,
+               bkmgr_type.create_by,
+               bkmgr_type.update_by,
+               bkmgr_book_type.book_id
+        from bkmgr_type
+                 inner join bkmgr_book_type on bkmgr_type.type_id = bkmgr_book_type.book_type_id
+        where bkmgr_book_type
+                  .book_id = #{id};
+    </select>
+    <select id="selectCount" resultType="java.lang.Long">
+        select count(*)
+        from bkmgr_type;
+    </select>
+    <select id="selectBooksTypes" resultMap="BookTypeDtoResult">
+        select bkmgr_type.type_id,
+        bkmgr_type.type,
+        bkmgr_type.`desc`,
+        bkmgr_type.create_time,
+        bkmgr_type.update_time,
+        bkmgr_type.create_by,
+        bkmgr_type.update_by,
+        bkmgr_book_type.book_id
+        from bkmgr_type
+        inner join bkmgr_book_type on bkmgr_type.type_id = bkmgr_book_type.book_type_id
+        where bkmgr_book_type.book_id in
+        <foreach item="bookId" collection="list" open="(" separator="," close=")">
+            #{bookId}
+        </foreach>
+    </select>
+
+    <insert id="insertBookType" parameterType="BookType" useGeneratedKeys="true"
+            keyProperty="typeId">
+        insert into bkmgr_type
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="type != null">type,</if>
+            <if test="desc != null">`desc`,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="updateBy != null">update_by,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="type != null">#{type},</if>
+            <if test="desc != null">#{desc},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+        </trim>
+    </insert>
+    <insert id="insertBookTypes">
+        insert into bkmgr_book_type(book_id, book_type_id) values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.bookId},#{item.typeId})
+        </foreach>
+    </insert>
+
+    <update id="updateBookType" parameterType="BookType">
+        update bkmgr_type
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="type != null">type = #{type},</if>
+            <if test="desc != null">`desc` = #{desc},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+        </trim>
+        where type_id = #{typeId}
+    </update>
+
+    <delete id="deleteBookTypeByTypeId" parameterType="Long">
+        delete
+        from bkmgr_type
+        where type_id = #{typeId}
+    </delete>
+
+    <delete id="deleteBookTypeByTypeIds" parameterType="String">
+        delete from bkmgr_type where type_id in
+        <foreach item="typeId" collection="array" open="(" separator="," close=")">
+            #{typeId}
+        </foreach>
+    </delete>
+
+
+    <delete id="deleteBookTypes">
+        delete
+        from bkmgr_book_type
+        where book_id in
+        <foreach collection="array" item="bookId" open="(" separator="," close=")">
+            #{bookId}
+        </foreach>
+    </delete>
+    <delete id="deleteBookRelatedTypes">
+        delete from bkmgr_book_type where bkmgr_book_type.book_type_id in
+        <foreach item="typeId" collection="array" open="(" separator="," close=")">
+            #{typeId}
+        </foreach>
+    </delete>
+</mapper>
